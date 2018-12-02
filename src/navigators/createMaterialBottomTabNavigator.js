@@ -1,6 +1,7 @@
 /* @flow */
 
 import * as React from 'react';
+import {Keyboard,Platform} from 'react-native';
 import { BottomNavigation } from 'react-native-paper';
 import { createTabNavigator, type InjectedProps } from 'react-navigation-tabs';
 
@@ -10,6 +11,29 @@ type Props = InjectedProps & {
 };
 
 class BottomNavigationView extends React.Component<Props> {
+  
+  state = {
+    keyboardOpen: false,
+  }
+
+  componentDidMount () {
+    this.keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', this._keyboardDidShow);
+    this.keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', this._keyboardDidHide);
+  }
+
+  componentWillUnmount () {
+    this.keyboardDidShowListener.remove();
+    this.keyboardDidHideListener.remove();
+  }
+
+  _keyboardDidShow () {
+    this.setState({keyboardOpen:true});
+  }
+
+  _keyboardDidHide () {
+    this.setState({keyboardOpen:false});
+  }  
+  
   _getColor = ({ route }) => {
     const { descriptors } = this.props;
     const descriptor = descriptors[route.key];
@@ -42,11 +66,13 @@ class BottomNavigationView extends React.Component<Props> {
     } = this.props;
 
     const isVisible = this._isVisible();
-    const extraStyle =
+    let extraStyle =
       typeof isVisible === 'boolean'
         ? { display: isVisible ? null : 'none' }
         : null;
 
+    extraStyle = Platform.OS==='android' && this.state.keyboardOpen ? {display: 'none'} : null;
+    
     return (
       <BottomNavigation
         // Pass these for backward compaibility
